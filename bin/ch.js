@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// claudehopper helper: the account vault behind /account. Also usable from a terminal:
+// Claude-Hopper helper: the account vault behind /account. Also usable from a terminal:
 //
 //   node ch.js list                  list saved accounts
 //   node ch.js add <name>            save the logged-in account under <name>

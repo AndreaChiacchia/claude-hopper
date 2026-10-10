@@ -33,6 +33,6 @@ export type View = {
 
 declare module 'claude-code' {
   interface PluginState {
-    claudehopper: { view: View; tick: number }
+    'claudehopper': { view: View; tick: number }
   }
 }

@@ -36,7 +36,7 @@ const HELP = [
   '/account rename <a> <b>  rename a saved account',
   '/account list            list saved accounts',
   '',
-  'To add another account: run /login with it; claudehopper saves the one you leave and the one you log in to.',
+  'To add another account: run /login with it; Claude-Hopper saves the one you leave and the one you log in to.',
   'A switch applies to every open Claude Code session from its next message.',
 ].join('\n')
 
@@ -83,10 +83,10 @@ async function adopt($: EngineInterface, { announce }: { announce: boolean }) {
   try {
     const saved = await ch<Saved>($, ['adopt'])
     if (saved.created && announce) {
-      $.ui.toast(`claudehopper: saved ${saved.email} as "${saved.name}" (/account rename to change)`)
+      $.ui.toast(`Claude-Hopper: saved ${saved.email} as "${saved.name}" (/account rename to change)`)
     }
   } catch (err) {
-    $.ui.log(`claudehopper: could not save the current account: ${(err as Error).message}`, { to: 'debug' })
+    $.ui.log(`Claude-Hopper: could not save the current account: ${(err as Error).message}`, { to: 'debug' })
   }
 }
 
@@ -112,7 +112,7 @@ async function recordUsage($: EngineInterface, windows: readonly { kind: string;
 
 async function switchTo($: EngineInterface, name: string): Promise<string> {
   const v = await read($, view)
-  if (v.busy) return `claudehopper: already ${v.busy}`
+  if (v.busy) return `Claude-Hopper: already ${v.busy}`
   await update($, view, cur => ({ ...cur, busy: `switching to ${name}…`, error: null }))
   try {
     const r = await ch<Switched>($, ['switch', name])
@@ -130,7 +130,7 @@ async function switchTo($: EngineInterface, name: string): Promise<string> {
     const message = (err as Error).message
     await update($, view, cur => ({ ...cur, busy: null, error: message }))
 
-    return `claudehopper: ${message}`
+    return `Claude-Hopper: ${message}`
   }
 }
 
@@ -149,7 +149,7 @@ export const register: Register = on => {
 
     await $.command.register({
       name: 'account',
-      description: 'Switch between saved Claude accounts (claudehopper)',
+      description: 'Switch between saved Claude accounts (Claude-Hopper)',
       argumentHint: '[name | add | remove | rename | list]',
     })
 
@@ -250,7 +250,7 @@ export const register: Register = on => {
           return { text: await switchTo($, sub) }
       }
     } catch (err) {
-      return { text: `claudehopper: ${(err as Error).message}` }
+      return { text: `Claude-Hopper: ${(err as Error).message}` }
     }
   })
 

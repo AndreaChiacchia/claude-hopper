@@ -1,8 +1,8 @@
-# claudehopper
+# Claude-Hopper
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue)
 
-A Claude Code mod for switching between several Claude accounts without logging in again. A switch happens inside the running session: your next message goes out on the other account, and the conversation carries on.
+A mod for the Claude Code CLI for switching between several Claude accounts without logging in again. A switch happens inside the running session: your next message goes out on the other account, and the conversation carries on.
 
 ```
 Accounts
@@ -29,14 +29,16 @@ Accounts
 
 ## Install
 
-The mod needs Claude Code 2.1.296 or later and Node.js on `PATH`. The vault encryption is Windows-only for now; see Limitations.
+**Claude Code CLI only.** The mod runs in the CLI in any terminal, including the terminals built into VS Code or JetBrains. It does not run in the Claude desktop app, the VS Code extension's chat panel, the web or mobile, because it needs to run local commands, which the mod API allows only in the CLI.
+
+You also need Claude Code 2.1.296 or later and Node.js on `PATH`. The vault encryption is Windows-only for now; see Limitations.
 
 Load it in every session by adding the folder to `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json`:
 
 ```json
 {
   "env": {
-    "CLAUDE_CODE_PLUGIN_DIRS": "C:\\Users\\<you>\\projects\\mods\\claudehopper"
+    "CLAUDE_CODE_PLUGIN_DIRS": "C:\\Users\\<you>\\projects\\mods\\claude-hopper"
   }
 }
 ```
@@ -63,15 +65,16 @@ The helper also runs from a terminal: `node bin/ch.js list`, `node bin/ch.js swi
 Claude Code keeps its login in two files: the tokens in `~/.claude/.credentials.json` (`claudeAiOauth`) and the identity in `~/.claude.json` (`oauthAccount`). It re-reads the credentials file before each request, so replacing those two entries switches accounts without a restart.
 
 - **Vault:** `~/.claudehopper/`. `accounts.json` holds names, emails and plans; `secrets/` holds each account's tokens, encrypted with Windows DPAPI (readable only by your Windows user); `usage.json` holds the last usage reading of each account.
-- **Token refreshes:** Claude Code renews the access token and replaces the refresh token from time to time. claudehopper saves the current tokens back to the vault every 10 minutes and before every switch, so the stored copy stays valid.
+- **Token refreshes:** Claude Code renews the access token and replaces the refresh token from time to time. Claude-Hopper saves the current tokens back to the vault every 10 minutes and before every switch, so the stored copy stays valid.
 - **Which account is active** is read from a fingerprint of the token in the credentials file, not from `~/.claude.json`, which a running session may rewrite with its old identity. A token it has never seen is checked with Anthropic's profile endpoint before it's stored, so tokens are never filed under the wrong account.
 - **Usage** comes from the rate-limit readings Claude Code gets with each response. An account you're not using shows its last reading and how old it is; a window whose reset time has passed shows as reset.
 
 ## Limitations
 
+- **CLI only.** See Install.
 - **All open sessions switch together.** They share one credentials file, and the panel lists the other open sessions.
 - **`/status` in an already-open session** may show the previous email until restart. The account actually in use is the one in the footer label.
-- **Windows only for now.** The vault is encrypted with DPAPI. On macOS Claude Code keeps its login in the Keychain, which claudehopper doesn't read.
+- **Windows only for now.** The vault is encrypted with DPAPI. On macOS Claude Code keeps its login in the Keychain, which Claude-Hopper doesn't read.
 - **Usage of accounts you aren't using** is the last reading, not live. Usage from elsewhere (claude.ai, another machine) shows up once you switch to that account.
 - **`/logout`** may revoke the token server-side. To add an account, use `/login` directly instead of logging out first.
 
