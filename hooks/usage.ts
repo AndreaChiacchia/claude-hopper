@@ -60,6 +60,30 @@ export function barCells(percent: number, width = 5): { filled: number; empty: n
   return { filled, empty: width - filled }
 }
 
+type RateLimit = { kind: string; percentUsed: number; resetsAt?: string }
+
+/**
+ * The engine's rate limits with its 5h and weekly windows swapped for an
+ * account's saved ones (left out where it has none); other windows kept.
+ */
+export function standInLimits(
+  live: readonly RateLimit[],
+  saved: { fiveHour?: Omit<RateLimit, 'kind'>; sevenDay?: Omit<RateLimit, 'kind'> } | undefined,
+): RateLimit[] {
+  const windows: RateLimit[] = []
+  if (saved?.fiveHour) windows.push({ kind: 'five_hour', ...saved.fiveHour })
+  if (saved?.sevenDay) windows.push({ kind: 'seven_day', ...saved.sevenDay })
+
+  return [...windows, ...live.filter(w => w.kind !== 'five_hour' && w.kind !== 'seven_day')]
+}
+
+/** The 5h and weekly readings, as one string two measurements compare by. */
+export function readingOf(limits: readonly RateLimit[]): string {
+  return JSON.stringify(
+    limits.filter(w => w.kind === 'five_hour' || w.kind === 'seven_day').map(w => [w.kind, w.percentUsed, w.resetsAt ?? null]),
+  )
+}
+
 /** A stored reading as it stands now: a window whose reset has passed reads as fresh. */
 export function figures(
   window: { percentUsed: number; resetsAt?: string } | undefined,

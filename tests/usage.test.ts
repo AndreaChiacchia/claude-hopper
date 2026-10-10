@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { barCells, figures, paceDelta, resetIn, tone } from '../hooks/usage'
+import { barCells, figures, paceDelta, readingOf, resetIn, standInLimits, tone } from '../hooks/usage'
 
 const HOUR = 3600_000
 const NOW = Date.parse('2026-10-10T12:00:00Z')
@@ -23,6 +23,32 @@ test('weekly window uses 168 hours', () => {
 test('a stored window past its reset reads as fresh', () => {
   const f = figures({ percentUsed: 73, resetsAt: new Date(NOW - 60_000).toISOString() }, 5, NOW)
   expect(f).toEqual({ percent: 0, resetIn: '', delta: null, isReset: true })
+})
+
+test("after a switch the new account's saved windows stand in for the engine's", () => {
+  const live = [
+    { kind: 'five_hour', percentUsed: 6, resetsAt: 'a' },
+    { kind: 'seven_day', percentUsed: 1, resetsAt: 'b' },
+    { kind: 'spend_limit', percentUsed: 12 },
+  ]
+  const five = { percentUsed: 40, resetsAt: 'c' }
+  const week = { percentUsed: 70, resetsAt: 'd' }
+  expect(standInLimits(live, { fiveHour: five, sevenDay: week })).toEqual([
+    { kind: 'five_hour', ...five },
+    { kind: 'seven_day', ...week },
+    { kind: 'spend_limit', percentUsed: 12 },
+  ])
+  // An account never measured shows no windows rather than the old account's.
+  expect(standInLimits(live, undefined)).toEqual([{ kind: 'spend_limit', percentUsed: 12 }])
+})
+
+test('two measurements compare by their 5h and weekly readings alone', () => {
+  const left = [
+    { kind: 'five_hour', percentUsed: 6, resetsAt: 'a' },
+    { kind: 'seven_day', percentUsed: 1, resetsAt: 'b' },
+  ]
+  expect(readingOf([...left, { kind: 'spend_limit', percentUsed: 3 }])).toBe(readingOf(left))
+  expect(readingOf([{ ...left[0]!, resetsAt: 'c' }, left[1]!])).not.toBe(readingOf(left))
 })
 
 test('reset countdown and bar', () => {

@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Account, UsageRecord, UsageWindow, View } from '../types'
-import { ago, barCells, figures, tone } from './usage'
+import { ago, barCells, figures, readingOf, standInLimits, tone } from './usage'
 
 const PANE = 'claudehopper'
 const SYNC_EVERY_MS = 10 * 60_000
@@ -41,6 +41,12 @@ const HELP = [
 ].join('\n')
 
 let sessionId = ''
+/**
+ * After a switch: the account switched to, whose saved usage stands in for the
+ * engine's, and the engine's readings then (the account left's), until a
+ * measurement differs from them.
+ */
+let standIn: { id: string; left: string; isTold?: boolean } | null = null
 
 // ---------- helper process ----------
 
@@ -72,7 +78,15 @@ async function refresh($: EngineInterface) {
   try {
     const status = await ch<Status>($, ['status', '--session', sessionId])
     const usage = await readUsage($, status.usageFile)
+    const was = (await read($, view)).activeId
     await update($, view, v => ({ ...v, ...status, usage, error: null }))
+    // Switched, here or in another session: redraw the status line with the new account's saved usage.
+    if (was && status.activeId && status.activeId !== was) {
+      const left = standIn?.left ?? readingOf((await $.session.usage()).rateLimits)
+      standIn = { id: status.activeId, left }
+      $.ui.log(`Claude-Hopper: switched to ${status.activeId}; its saved usage stands in`, { to: 'debug' })
+      $.ui.invalidate('ui.render')
+    }
   } catch (err) {
     await update($, view, v => ({ ...v, error: String((err as Error).message ?? err) }))
   }
@@ -174,7 +188,32 @@ export const register: Register = on => {
   })
 
   on('session.measure', async ($, e, next) => {
-    if (e.changed.includes('rateLimits')) await recordUsage($, e.rateLimits).catch(() => undefined)
+    // Readings other than the account left's: a response on the account switched to.
+    if (standIn && readingOf(e.rateLimits) !== standIn.left) {
+      standIn = null
+      $.ui.log('Claude-Hopper: a response measured the new account; the engine reads its usage now', { to: 'debug' })
+    }
+    // While standing in the engine still holds the account left's: nothing to save.
+    if (!standIn && e.changed.includes('rateLimits')) await recordUsage($, e.rateLimits).catch(() => undefined)
+
+    return next(e)
+  })
+
+  // After a switch the engine's rate limits stay the account left's until the next
+  // response: until then every caller (claudepeeker's status line) reads the windows
+  // last saved for the account switched to, or none when it has no reading yet.
+  on('session.usage', async ($, e, next) => {
+    const result = await next(e)
+    if (standIn === null || result.deny !== undefined) return result
+    const saved = (await read($, view)).usage[standIn.id]
+    if (!standIn.isTold) {
+      standIn.isTold = true
+      $.ui.log(`Claude-Hopper: ${next.origin.plugin} reads ${standIn.id}'s saved usage (${saved ? 'saved' : 'none saved'})`, { to: 'debug' })
+    }
+
+    return { value: { ...result.value, rateLimits: standInLimits(result.value.rateLimits, saved) } }
+  }).catch(($, e, next) => {
+    if (standIn) $.ui.log(`Claude-Hopper: usage stand-in failed: ${JSON.stringify(next.error)}`, { to: 'debug' })
 
     return next(e)
   })
@@ -253,6 +292,10 @@ export const register: Register = on => {
       return { text: `Claude-Hopper: ${(err as Error).message}` }
     }
   })
+
+  // Drawn as the plugins beneath draw it: hooked only so a switch's redraw
+  // reaches the hint line, where claudepeeker's status line reads the usage.
+  on('ui.render', { component: 'PromptHint' }, ($, e, next) => next(e))
 
   // ---------- bottom right: the footer's mode labels ----------
 
