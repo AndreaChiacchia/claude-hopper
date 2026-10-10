@@ -1,6 +1,6 @@
 {
   "name": "claudehopper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Switch between saved Claude accounts without logging in again, right inside the running session",
   "author": {
     "name": "AndreaChiacchia",
