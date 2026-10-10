@@ -1,6 +1,6 @@
 # Claude-Hopper
 
-![version](https://img.shields.io/badge/version-0.1.0-blue)
+![version](https://img.shields.io/badge/version-0.1.1-blue)
 
 A mod for the Claude Code CLI for switching between several Claude accounts without logging in again. A switch happens inside the running session: your next message goes out on the other account, and the conversation carries on.
 
@@ -26,6 +26,7 @@ Accounts
 - **Remembers logins.** Each account's tokens are kept until its refresh token expires, so `/login` is needed only once per account.
 - **Saves accounts automatically.** The account you're logged in to is saved on startup. `/login` saves the account you're leaving before the login and the new one after it.
 - **Current account in the footer:** `⇄ <name>` in the bottom-right corner, next to Claude Code's mode labels.
+- **Status line kept current on a switch.** A status line mod that reads the session's usage, such as [claudepeeker](https://github.com/AndreaChiacchia/claude-peeker), shows the new account's last saved 5-hour and weekly readings straight away, until your next message brings live ones.
 
 ## Install
 
