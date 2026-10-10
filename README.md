@@ -92,3 +92,7 @@ claude plugin test .
 | `bin/ch.js` | the vault helper the mod runs (Node, no dependencies) |
 | `types/index.d.ts` | the mod's state contract |
 | `tests/` | tests for the usage math, the panel and the footer label |
+
+## License
+
+MIT, see [LICENSE](LICENSE).

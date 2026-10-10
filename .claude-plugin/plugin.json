@@ -2,6 +2,10 @@
   "name": "claudehopper",
   "version": "0.1.0",
   "description": "Switch between saved Claude accounts without logging in again, right inside the running session",
-  "author": { "name": "AndreaChiacchia", "url": "https://github.com/AndreaChiacchia" },
-  "types": "./types/index.d.ts"
+  "author": {
+    "name": "AndreaChiacchia",
+    "url": "https://github.com/AndreaChiacchia"
+  },
+  "types": "./types/index.d.ts",
+  "license": "MIT"
 }
